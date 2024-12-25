@@ -1,0 +1,99 @@
+#define BLYNK_TEMPLATE_ID "TMPL3pNlOIheP"
+#define BLYNK_TEMPLATE_NAME "robotic arm"
+#include <WiFi.h>
+#include <BlynkSimpleEsp32.h>
+#include <ESP32Servo.h>
+
+
+// Blynk authentication token
+char auth[] = " ";
+// Wi-Fi credentials
+char ssid[] = " ";
+char pass[] = " ";
+
+// Define ESP32 pins for the servos
+int servo_pin_u = 15;   // Adjust based on your ESP32 board
+int servo_pin_o = 22;
+int servo_pin_m = 21;
+int servo_pin_gripper = 18;
+int servo_pin_turn = 19;
+
+// Servo positions
+int su = 0, sm = 0, so = 0, st = 90, sg = 0;
+
+// Initialize Servo objects
+Servo sg90_u, sg90_m, sg90_o, sg90_g, sg90_t;
+
+void go_home(int sleep = 2000);
+
+void setup() {
+  Serial.begin(115200);
+  Blynk.begin(auth, ssid, pass);
+
+  // Attach servos to pins
+  sg90_u.attach(servo_pin_u);
+  sg90_m.attach(servo_pin_m);
+  sg90_o.attach(servo_pin_o);
+  sg90_g.attach(servo_pin_gripper);
+  sg90_t.attach(servo_pin_turn);
+
+  go_home();
+}
+
+void loop() {
+  Blynk.run();
+}
+
+// Functions for updating servo positions via Blynk joystick
+BLYNK_WRITE(V0) {
+  int angle = param.asInt();
+  angle = constrain(angle, 0, 180);
+  su = angle;
+  sg90_u.write(su);
+  Serial.println("Upper servo set to " + String(su));
+}
+
+BLYNK_WRITE(V1) {
+  int angle = param.asInt();
+  angle = constrain(angle, 0, 180);
+  sm = angle;
+  sg90_m.write(sm);
+  Serial.println("Middle servo set to " + String(sm));
+}
+
+BLYNK_WRITE(V2) {
+  int angle = param.asInt();
+  angle = constrain(angle, 0, 180);
+  so = angle;
+  sg90_o.write(so);
+  Serial.println("Lower servo set to " + String(so));
+}
+
+BLYNK_WRITE(V3) {
+  int angle = param.asInt();
+  angle = constrain(angle, 0, 360);
+  sg = angle;
+  sg90_g.write(sg);
+  Serial.println("Gripper servo set to " + String(sg));
+}
+
+BLYNK_WRITE(V4) {
+  int angle = param.asInt();
+  angle = constrain(angle, 0, 180);
+  st = angle;
+  sg90_t.write(st);
+  Serial.println("Turn servo set to " + String(st));
+}
+
+// Go to home position function
+void go_home(int sleep) {
+  su = sm = sg = 180;
+  st = 90;
+  so = 0;
+  sg90_u.write(su);
+  sg90_m.write(sm);
+  sg90_o.write(so);
+  sg90_g.write(sg);
+  sg90_t.write(st);
+  delay(sleep);
+}
